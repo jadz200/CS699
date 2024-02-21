@@ -1,0 +1,35 @@
+i0=4
+i1=7/2
+res=[i0,i1]
+
+prev_layer=len(res)
+len_layer=0
+
+for layer in dnn: #loop over all the layers
+    print("nodes: "+ str(layer))
+    print("length: "+ str(len_layer))
+    for i in range(0,len(layer)): #loops over neurons in a specific layer
+        print(layer[i])
+        print("bias " +str(layer[i][1]))
+        temp=0.0
+        for j in range(len(layer[i][0])): #loops over all the weigth connected by the previous neurons to the current neuron
+            weight=(layer[i][0][j])
+            print("weigth: "+str(weight))
+            print("IM GOING INSANE   "+str(j))
+            print(len_layer)
+            input=res[j+len_layer]
+            print("input: "+str(input))
+            temp+= weight*input
+        bias=layer[i][1]
+        temp-=bias
+        if layer[i][2]==True:
+            if temp<=0:
+                res.append(0)
+            else:
+                res.append(temp)
+        else:
+            res.append(temp)
+
+    len_layer+=prev_layer
+    prev_layer=len(layer)
+    print(res)
