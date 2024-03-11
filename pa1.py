@@ -1,15 +1,17 @@
 import z3
 
 def my_symbolic_execution(dnn):
-    i0 = z3.Real('i0')
-    i1 = z3.Real('i1')
-    res = {'i0': i0, 'i1': i1}
-    neurons=["i0","i1"]
+    res = {}
+    neurons=[]
     prev_layer=len(res)
     len_layer=0
     for layer_index, layer in enumerate(dnn): #loop over all the layers
         for neuron_index, neuron in enumerate(layer): #loops over neurons in a specific layer
-            # print(neuron)
+            if layer_index==0:
+                neuron_name = f'i{neuron_index}'
+                neurons.append(neuron_name)
+                res[neuron_name]=z3.Real(neuron_name)
+                continue
             bias=layer[neuron_index][1]
 
             temp=-bias
@@ -35,6 +37,9 @@ def my_symbolic_execution(dnn):
     return z3.And(ans)
 
 def test():
+    print("\n\nTest1:\n\n")
+    input_layer=["i0","i1"]
+
     n00 = ([1.0, -1.0], 0.0, True)
     n01 = ([1.0, 1.0], 0.0, True)
     hidden_layer0 = [n00,n01]
@@ -49,7 +54,7 @@ def test():
     o1 = ([-1.0, 1.0], 0.0, False)
     output_layer = [o0, o1]
 
-    dnn = [hidden_layer0, hidden_layer1, output_layer]
+    dnn = [input_layer,hidden_layer0, hidden_layer1, output_layer]
     symbolic_states = my_symbolic_execution(dnn)
     assert z3.is_expr(symbolic_states) 
     print("\n\nSymbolic States:\n")
@@ -74,24 +79,27 @@ def test():
     z3.prove(z3.Implies(symbolic_states, g))
 
 def test2():
-    n00 = ([1.0, -1.0], 0.0, True)
-    n01 = ([1.0, 1.0], 0.0, True)
-    n02 = ([1.0, 1.0], 0.0, True)
-    n03 = ([1.0, 1.0], 0.0, True)
+    print("\n\nTest2:\n\n")
+    input_layer=["i0","i1"]
+
+    n00 = ([1.0, -1.0], -2, True)
+    n01 = ([1.0, -0.5], -1, True)
+    n02 = ([0.7, 1.0], 0.0, True)
+    n03 = ([0.5, 1.0], 0.0, True)
 
     hidden_layer0 = [n00,n01,n02,n03]
 
-    n10 = ([0.5, -0.2,-0.5, 0.1], 0.0, True)
-    n11 = ([-0.5, 0.1,-0.5, 0.1], 0.0, True)
-    n12 = ([-0.5, 0.1,-0.5, 0.1], 0.0, True)
+    n10 = ([0.9, 0.2,0.5, 0.1], 0.0, True)
+    n11 = ([0.5, 0.1,-0.5, 0.1], 0.0, True)
+    n12 = ([0.5, 0.1,-0.5, 0.1], 0.0, True)
     n13 = ([-0.5, 0.1,-0.5, 0.1], 1.0, True)
     hidden_layer1 = [n10, n11,n12,n13]
 
 
     n20 = ([1, -0.2,1, -0.2], 0.0, True)
     n21 = ([-0.5, 0.1,-0.5, 0.1], 0.0, True)
-    n22 = ([-0.5, 0.1,-0.5, 0.1], 0.0, True)
-    n23 = ([-0.5, 0.1,-0.5, 0.1], 1.0, True)
+    n22 = ([-0.5, 0.1,-0.2, 0.1], 0.0, True)
+    n23 = ([-0.5, 0.1,-0.3, 0.1], 1.0, True)
 
     hidden_layer2 = [n20, n21,n22,n23]
 
@@ -99,7 +107,7 @@ def test2():
     o0 = ([1.0, -1.0,1.0, -1.0], 0.0, False)  
     o1 = ([-1.0, 1.0,-1.0, 1.0], 0.0, False)
     output_layer = [o0, o1]
-    dnn = [hidden_layer0, hidden_layer1,hidden_layer2, output_layer]
+    dnn = [input_layer,hidden_layer0, hidden_layer1,hidden_layer2, output_layer]
     symbolic_states = my_symbolic_execution(dnn)
 
     assert z3.is_expr(symbolic_states) 
@@ -123,5 +131,10 @@ def test2():
     g = z3.Implies(i0 - i1 > 0.0, o0 > o1)
     print(g)  # Implies(And(i0 - i1 > 0, i0 + i1 <= 0), o0 > o1)
     z3.prove(z3.Implies(symbolic_states, g))
-test()
-test2()
+
+def main():
+    test()  
+    test2() 
+
+if __name__ == "__main__":
+    main()
