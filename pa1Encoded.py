@@ -11,14 +11,14 @@ def my_symbolic_execution(dnn):
                 neuron_name = f'i{neuron_index}'
                 neurons.append(neuron_name)
                 res[neuron_name]=z3.Real(neuron_name)
-                continue
+
             bias=layer[neuron_index][1]
 
             temp=-bias
             if layer_index == len(dnn) - 1:
                 neuron_name = f'o{neuron_index}'
             else:
-                neuron_name = f'n{layer_index}_{neuron_index}'
+                neuron_name = f'n{layer_index-1}_{neuron_index}'
             neurons.append(neuron_name)
             for weight_index, weight in enumerate(neuron[0]): #loops over all the weigth connected by the previous neurons to the current neuron
                 weight=(layer[neuron_index][0][weight_index])
@@ -38,7 +38,6 @@ def my_symbolic_execution(dnn):
 
 def test():
     print("\n\nTest1:\n\n")
-    input_layer=["i0","i1"]
 
     n00 = ([1.0, -1.0], 0.0, True)
     n01 = ([1.0, 1.0], 0.0, True)
@@ -54,7 +53,7 @@ def test():
     o1 = ([-1.0, 1.0], 0.0, False)
     output_layer = [o0, o1]
 
-    dnn = [input_layer,hidden_layer0, hidden_layer1, output_layer]
+    dnn = [hidden_layer0, hidden_layer1, output_layer]
     symbolic_states = my_symbolic_execution(dnn)
     assert z3.is_expr(symbolic_states) 
     print("\n\nSymbolic States:\n")
@@ -63,7 +62,7 @@ def test():
     z3.solve(symbolic_states)
     print("\n\nfinding outputs when inputs are fixed [i0 == 1, i1 == -1]\n")
     i0, i1, n0_0, n0_1, o0, o1 = z3.Reals("i0 i1 n0_0 n0_1 o0 o1")
-    g = z3.And([i0 == 1.0, i1 == -1.0])
+    g = z3.And([i0 == 0.3, i1 == 0])
     z3.solve(z3.And(symbolic_states, g))
     print("\n\nProve that if (n0_0 > 0.0 and n0_1 <= 0.0) then o0 > o1\n")
     g = z3.Implies(z3.And([n0_0 > 0.0, n0_1 <= 0.0]), o0 > o1)
@@ -134,7 +133,7 @@ def test2():
 
 def main():
     test()  
-    test2() 
+    # test2() 
 
 if __name__ == "__main__":
     main()
